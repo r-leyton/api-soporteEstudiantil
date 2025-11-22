@@ -9,6 +9,22 @@ class CommentResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        // Usar sanctum guard (API) con fallback a default
+        $userId = auth('sanctum')->id() ?? auth()->id();
+        $userVote = null;
+        $voteScore = 0;
+
+        if ($this->relationLoaded('votes')) {
+            // Calcular vote_score como SUM(value), no COUNT
+            $voteScore = $this->votes->sum('value');
+
+            // Obtener voto del usuario actual
+            if ($userId) {
+                $vote = $this->votes->where('user_id', $userId)->first();
+                $userVote = $vote ? $vote->value : null;
+            }
+        }
+
         return [
             'id' => $this->id,
             'body' => $this->body,
@@ -20,8 +36,8 @@ class CommentResource extends JsonResource
             'replies' => CommentResource::collection($this->whenLoaded('replies')),
             'replies_count' => $this->whenCounted('replies'),
             'votes_count' => $this->whenCounted('votes'),
-            'vote_score' => $this->votes_count ? 
-                ($this->votes->where('value', 1)->count() - $this->votes->where('value', -1)->count()) : 0,
+            'vote_score' => $voteScore,
+            'user_vote' => $userVote,
             'created_at' => $this->created_at?->toDateTimeString(),
             'updated_at' => $this->updated_at?->toDateTimeString(),
         ];

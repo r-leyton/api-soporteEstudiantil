@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Http\Resources\ThreadResource;
-use IncadevUns\CoreDomain\CoreDomain\Models\Forum;
-use IncadevUns\CoreDomain\CoreDomain\Models\Thread;
 use Illuminate\Http\JsonResponse;
 use IncadevUns\CoreDomain\Models\Forum as ModelsForum;
 use IncadevUns\CoreDomain\Models\Thread as ModelsThread;
@@ -65,17 +63,22 @@ class ThreadController extends Controller
 
         $forum = ModelsForum::findOrFail($forumId);
 
-        $thread = ModelsThread::create([$validated]);
+        $thread = ModelsThread::create([
+            'user_id' => auth()->id(),
+            'forum_id' => $forum->id,
+            'title' => $validated['title'],
+            'body' => $validated['body'],
+        ]);
 
         return response()->json(new ThreadResource($thread->load(['user', 'forum'])), 201);
     }
 
     public function show(ModelsThread $thread): ThreadResource
     {
-        return new ThreadResource($thread->load(['user', 'forum']));
+        return new ThreadResource($thread->load(['user', 'forum', 'votes']));
     }
 
-    public function update(Request $request,ModelsThread $thread): ThreadResource
+    public function update(Request $request, ModelsThread $thread): ThreadResource
     {
         // $this->authorize('update', $thread);
         

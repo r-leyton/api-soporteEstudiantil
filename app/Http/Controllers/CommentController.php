@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Resources\CommentResource;
-use IncadevUns\CoreDomain\CoreDomain\Models\Comment;
-use IncadevUns\CoreDomain\CoreDomain\Models\Thread;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use IncadevUns\CoreDomain\Models\Comment as ModelsComment;
@@ -15,18 +13,17 @@ class CommentController extends Controller
     public function indexByThread(Request $request, $threadId)
     {
         $thread = ModelsThread::findOrFail($threadId);
-        
-        // Comentarios principales (sin parent_id) con sus respuestas
+
+        // Devolver TODOS los comentarios del thread (el frontend construye el árbol)
         $query = ModelsComment::where('thread_id', $threadId)
-                       ->whereNull('parent_id')
-                       ->with(['user', 'replies.user'])
-                       ->withCount(['replies', 'votes']);
-        
+                       ->with(['user', 'votes'])
+                       ->withCount(['votes']);
+
         $query->orderBy('created_at', 'asc');
-        
-        $perPage = $request->get('per_page', 15);
-        $comments = $query->paginate($perPage);
-        
+
+        // Sin paginación para permitir construcción del árbol completo
+        $comments = $query->get();
+
         return CommentResource::collection($comments);
     }
 
@@ -68,9 +65,10 @@ class CommentController extends Controller
         }
 
         $comment = ModelsComment::create([
-            'body' => $validated['body'],
+            'user_id' => auth()->id(),
             'thread_id' => $thread->id,
             'parent_id' => $validated['parent_id'] ?? null,
+            'body' => $validated['body'],
         ]);
 
         return response()->json(new CommentResource($comment->load(['user'])), 201);

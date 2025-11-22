@@ -14,22 +14,36 @@ Route::get('/test', function () {
         'timestamp' => now()
     ]);
 });
-Route::apiResource('forums', ForumController::class);
+
+// Rutas públicas (solo lectura)
+Route::get('/forums', [ForumController::class, 'index']);
+Route::get('/forums/{forum}', [ForumController::class, 'show']);
 Route::get('/forums/{forumId}/threads', [ThreadController::class, 'indexByForum']);
-
-// Rutas de Hilos
-Route::apiResource('threads', ThreadController::class)->except(['store']);
-Route::post('/forums/{forumId}/threads', [ThreadController::class, 'store']);
-Route::get('/users/{userId}/threads', [ThreadController::class, 'indexByUser']);
-
-// Rutas de Comentarios
-Route::apiResource('comments', CommentController::class)->except(['store']);
+Route::get('/threads/{thread}', [ThreadController::class, 'show']);
 Route::get('/threads/{threadId}/comments', [CommentController::class, 'indexByThread']);
-Route::post('/threads/{threadId}/comments', [CommentController::class, 'store']);
-Route::get('/users/{userId}/comments', [CommentController::class, 'indexByUser']);
-
-// Rutas de Votos
-Route::post('/threads/{threadId}/votes', [VoteController::class, 'voteThread']);
-Route::post('/comments/{commentId}/votes', [VoteController::class, 'voteComment']);
 Route::get('/threads/{threadId}/votes', [VoteController::class, 'getThreadVotes']);
 Route::get('/comments/{commentId}/votes', [VoteController::class, 'getCommentVotes']);
+
+// Rutas protegidas (requieren autenticación)
+Route::middleware('auth:sanctum')->group(function () {
+    // Forums (crear, editar, eliminar)
+    Route::post('/forums', [ForumController::class, 'store']);
+    Route::put('/forums/{forum}', [ForumController::class, 'update']);
+    Route::delete('/forums/{forum}', [ForumController::class, 'destroy']);
+
+    // Threads (crear, editar, eliminar)
+    Route::post('/forums/{forumId}/threads', [ThreadController::class, 'store']);
+    Route::put('/threads/{thread}', [ThreadController::class, 'update']);
+    Route::delete('/threads/{thread}', [ThreadController::class, 'destroy']);
+    Route::get('/users/{userId}/threads', [ThreadController::class, 'indexByUser']);
+
+    // Comments (crear, editar, eliminar)
+    Route::post('/threads/{threadId}/comments', [CommentController::class, 'store']);
+    Route::put('/comments/{comment}', [CommentController::class, 'update']);
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
+    Route::get('/users/{userId}/comments', [CommentController::class, 'indexByUser']);
+
+    // Votes (crear/toggle)
+    Route::post('/threads/{threadId}/votes', [VoteController::class, 'voteThread']);
+    Route::post('/comments/{commentId}/votes', [VoteController::class, 'voteComment']);
+});
