@@ -44,7 +44,7 @@ class ForumController extends Controller
 
     public function show(ModelsForum $forum): ForumResource
     {
-        return new ForumResource($forum->load(['user']));
+        return new ForumResource($forum);
     }
 
     public function update(Request $request, ModelsForum $forum): ForumResource
