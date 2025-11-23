@@ -4,6 +4,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ForumController;
 use App\Http\Controllers\ThreadController;
 use App\Http\Controllers\VoteController;
+use App\Http\Controllers\TutoringController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -46,4 +47,22 @@ Route::middleware('auth:sanctum')->group(function () {
     // Votes (crear/toggle)
     Route::post('/threads/{threadId}/votes', [VoteController::class, 'voteThread']);
     Route::post('/comments/{commentId}/votes', [VoteController::class, 'voteComment']);
+
+    // ===== TUTORÍAS =====
+    Route::prefix('tutoring')->group(function () {
+        // Teacher routes
+        Route::get('/requests', [TutoringController::class, 'getTeacherRequests']);
+        Route::post('/requests/{id}/accept', [TutoringController::class, 'acceptRequest']);
+        Route::post('/requests/{id}/reject', [TutoringController::class, 'rejectRequest']);
+        Route::post('/requests/{id}/mark-attendance', [TutoringController::class, 'markAttendance']);
+        Route::get('/history', [TutoringController::class, 'getTeacherHistory']);
+
+        // Student routes
+        Route::post('/requests', [TutoringController::class, 'createRequest']);
+        Route::get('/my-requests', [TutoringController::class, 'getStudentRequests']);
+        Route::get('/teachers', [TutoringController::class, 'getAvailableTeachers']);
+
+        // Shared
+        Route::get('/availabilities/{teacherId}', [TutoringController::class, 'getTeacherAvailability']);
+    });
 });
