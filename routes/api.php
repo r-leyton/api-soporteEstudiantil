@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AcademicReportController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ForumController;
 use App\Http\Controllers\ThreadController;
@@ -65,4 +66,10 @@ Route::middleware('auth:sanctum')->group(function () {
         // Shared
         Route::get('/availabilities/{teacherId}', [TutoringController::class, 'getTeacherAvailability']);
     });
+    
 });
+Route::prefix('report')->group(function () {
+        Route::post('/reports/enrolled-courses', [AcademicReportController::class, 'enrolledCoursesReport']);
+        Route::post('/reports/single-course-grades', [AcademicReportController::class, 'singleCourseGradesReport']);
+        Route::post('/reports/academic-summary', [AcademicReportController::class, 'studentAcademicSummary']);
+    });
