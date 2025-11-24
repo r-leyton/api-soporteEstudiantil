@@ -200,22 +200,22 @@
                     {{ \Carbon\Carbon::parse($enrollment->group->end_date)->format('m/Y') }}
                 </td>
                 <td class="text-center">
-                    @if($enrollment->enrollmentResults)
-                        <strong>{{ number_format($enrollment->enrollmentResults->final_grade, 1) }}</strong>
+                    @if($enrollment->result)
+                        <strong>{{ number_format($enrollment->result->final_grade, 1) }}</strong>
                     @else
                         -
                     @endif
                 </td>
                 <td class="text-center">
-                    @if($enrollment->enrollmentResults)
-                        {{ number_format($enrollment->enrollmentResults->attendance_percentage, 1) }}%
+                    @if($enrollment->result)
+                        {{ number_format($enrollment->result->attendance_percentage, 1) }}%
                     @else
                         -
                     @endif
                 </td>
                 <td class="text-center">
-                    @if($enrollment->enrollmentResults)
-                        @if($enrollment->enrollmentResults->status === 'approved')
+                    @if($enrollment->result)
+                        @if($enrollment->result->status === 'approved')
                             <span class="status-approved">APROBADO</span>
                         @else
                             <span class="status-failed">REPROBADO</span>
@@ -239,8 +239,8 @@
         • Cursos en Progreso: {{ $stats['in_progress_courses'] }}<br>
         • Promedio General:
         @php
-            $completedWithGrades = $enrollments->where('enrollmentResults')->where('enrollmentResults.final_grade', '>', 0);
-            $average = $completedWithGrades->avg('enrollmentResults.final_grade');
+            $completedWithGrades = $enrollments->filter(function($e) { return $e->result && $e->result->final_grade > 0; });
+            $average = $completedWithGrades->avg('result.final_grade');
         @endphp
         @if($average)
             <strong>{{ number_format($average, 1) }}</strong>

@@ -314,7 +314,7 @@ public function getAcademicSummary(Request $request)
                     'exam_id' => $grade->exam->id,
                     'exam_title' => $grade->exam->title,
                     'module_name' => $grade->exam->module->title ?? 'Sin módulo',
-                    'grade' => $grade->grade,
+                    'grade' => (float) $grade->grade,
                     'feedback' => $grade->feedback,
                     'exam_date' => $grade->exam->start_date,
                     'grade_letter' => $this->getGradeLetter($grade->grade)

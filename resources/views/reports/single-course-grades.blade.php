@@ -182,14 +182,14 @@
     </table>
 
     <!-- ========== RESULTADO FINAL ========== -->
-    @if($enrollment->enrollmentResults)
+    @if($enrollment->result)
     <div class="final-result">
         <strong>RESULTADO FINAL:</strong><br>
         Nota Final: 
         <span class="grade-excellent">
-            {{ number_format($enrollment->enrollmentResults->final_grade, 1) }}
+            {{ number_format($enrollment->result->final_grade, 1) }}
         </span><br>
-        Estado: {{ strtoupper($enrollment->enrollmentResults->status) }}
+        Estado: {{ strtoupper($enrollment->result->status) }}
     </div>
     @endif
 

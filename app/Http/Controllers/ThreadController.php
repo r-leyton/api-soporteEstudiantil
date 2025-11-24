@@ -10,6 +10,15 @@ use IncadevUns\CoreDomain\Models\Thread as ModelsThread;
 
 class ThreadController extends Controller
 {
+    /**
+     * Helper para obtener el user_id del request
+     */
+    private function getUserId(Request $request): ?int
+    {
+        $userId = $request->query('user_id') ?? $request->header('X-User-Id');
+        return $userId ? (int) $userId : null;
+    }
+
     public function indexByForum(Request $request, $forumId)
     {
         $forum = ModelsForum::findOrFail($forumId);
@@ -56,6 +65,15 @@ class ThreadController extends Controller
 
     public function store(Request $request, $forumId): JsonResponse
     {
+        $userId = $this->getUserId($request);
+        
+        if (!$userId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ID de usuario no proporcionado'
+            ], 400);
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'body' => 'required|string|min:10',
@@ -64,7 +82,7 @@ class ThreadController extends Controller
         $forum = ModelsForum::findOrFail($forumId);
 
         $thread = ModelsThread::create([
-            'user_id' => auth()->id(),
+            'user_id' => $userId,
             'forum_id' => $forum->id,
             'title' => $validated['title'],
             'body' => $validated['body'],
@@ -73,9 +91,30 @@ class ThreadController extends Controller
         return response()->json(new ThreadResource($thread->load(['user', 'forum'])), 201);
     }
 
-    public function show(ModelsThread $thread): ThreadResource
+    public function show(Request $request, ModelsThread $thread): JsonResponse
     {
-        return new ThreadResource($thread->load(['user', 'forum', 'votes']));
+        $userId = $this->getUserId($request);
+        
+        $thread->load(['user', 'forum', 'votes']);
+        $thread->loadCount(['comments', 'votes']);
+        
+        // Calcular vote_score y user_vote manualmente
+        $voteScore = $thread->votes->sum('value');
+        $userVote = null;
+        
+        if ($userId) {
+            $vote = $thread->votes->where('user_id', $userId)->first();
+            $userVote = $vote ? $vote->value : null;
+        }
+        
+        $resource = new ThreadResource($thread);
+        $data = $resource->toArray($request);
+        
+        // Sobrescribir con los valores correctos
+        $data['vote_score'] = $voteScore;
+        $data['user_vote'] = $userVote;
+        
+        return response()->json(['data' => $data]);
     }
 
     public function update(Request $request, ModelsThread $thread): ThreadResource

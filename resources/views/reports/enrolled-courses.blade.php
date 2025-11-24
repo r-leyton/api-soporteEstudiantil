@@ -154,8 +154,8 @@
                         @endif
                     </td>
                     <td class="text-center">
-                        @if ($enrollment->enrollmentResults)
-                            {{ number_format($enrollment->enrollmentResults->final_grade, 1) }}
+                        @if ($enrollment->result)
+                            {{ number_format($enrollment->result->final_grade, 1) }}
                         @else
                             -
                         @endif

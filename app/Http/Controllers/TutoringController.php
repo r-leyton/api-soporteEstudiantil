@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TutoringController extends Controller
 {
@@ -47,10 +48,10 @@ class TutoringController extends Controller
 
             // Mapear status del frontend al backend
             $statusMap = [
-                'pending' => 'pending',
-                'accepted' => 'confirmed',
-                'rejected' => 'rejected',
-                'completed' => 'completed'
+                'pending' => AppointmentStatus::Pending,
+                'accepted' => AppointmentStatus::Confirmed,
+                'rejected' => AppointmentStatus::Rejected,
+                'completed' => AppointmentStatus::Completed
             ];
 
             // Filtrar por status si no es 'all'
@@ -61,29 +62,41 @@ class TutoringController extends Controller
 
             $requests = $query->orderBy('created_at', 'desc')->get();
 
-            // Mapear el status de vuelta para el frontend y agregar campos necesarios
-            $requests->transform(function ($request) {
-                if ($request->status === 'confirmed') {
-                    $request->status = 'accepted';
-                } elseif ($request->status === 'cancelled') {
-                    $request->status = 'rejected';
-                }
+            // Transformar los datos para el frontend
+            $formattedRequests = $requests->map(function ($appointment) {
+                // Mapear el status Enum a strings que espera el frontend
+                $status = match($appointment->status) {
+                    AppointmentStatus::Confirmed => 'accepted',
+                    AppointmentStatus::Cancelled => 'rejected',
+                    default => $appointment->status->value
+                };
                 
-                // Agregar campos que espera el frontend
-                $request->studentName = $request->student ? $request->student->name : 'Desconocido';
-                $request->requested_date = $request->start_time ? $request->start_time->format('Y-m-d') : null;
-                $request->requested_time = $request->start_time ? $request->start_time->format('H:i') : null;
-                
-                return $request;
+                return [
+                    'id' => $appointment->id,
+                    'teacher_id' => $appointment->teacher_id,
+                    'student_id' => $appointment->student_id,
+                    'start_time' => $appointment->start_time,
+                    'end_time' => $appointment->end_time,
+                    'status' => $status,
+                    'rejection_reason' => $appointment->rejection_reason,
+                    'student_attended' => $appointment->student_attended,
+                    'meet_url' => $appointment->meet_url,
+                    'created_at' => $appointment->created_at,
+                    'updated_at' => $appointment->updated_at,
+                    'studentName' => $appointment->student ? $appointment->student->name : 'Desconocido',
+                    'requested_date' => $appointment->start_time ? $appointment->start_time->format('Y-m-d') : null,
+                    'requested_time' => $appointment->start_time ? $appointment->start_time->format('H:i') : null,
+                    'student' => $appointment->student
+                ];
             });
 
             return response()->json([
                 'success' => true,
-                'data' => $requests,
+                'data' => $formattedRequests,
                 'message' => 'Solicitudes obtenidas correctamente'
             ], 200);
         } catch (\Exception $e) {
-            \Log::error('Error en getTeacherRequests: ' . $e->getMessage(), [
+            Log::error('Error en getTeacherRequests: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
                 'user_id' => $this->getUserId($request)
             ]);
@@ -116,7 +129,7 @@ class TutoringController extends Controller
             }
 
             // Validar que el status sea pending
-            if ($appointment->status !== 'pending') {
+            if ($appointment->status !== AppointmentStatus::Pending) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Solo se pueden aceptar solicitudes pendientes'
@@ -125,18 +138,15 @@ class TutoringController extends Controller
 
             // Validar meet_url si se envía
             $validated = $request->validate([
-                'meet_url' => 'nullable|url'
+                'meet_url' => 'nullable|string|max:500'
             ]);
 
             // Actualizar la solicitud
-            $appointment->status = 'confirmed';
+            $appointment->status = AppointmentStatus::Confirmed;
             if (isset($validated['meet_url'])) {
                 $appointment->meet_url = $validated['meet_url'];
             }
             $appointment->save();
-
-            // Mapear status para el frontend
-            $appointment->status = 'accepted';
 
             return response()->json([
                 'success' => true,
@@ -182,7 +192,7 @@ class TutoringController extends Controller
             }
 
             // Validar que el status sea pending
-            if ($appointment->status !== 'pending') {
+            if ($appointment->status !== AppointmentStatus::Pending) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Solo se pueden rechazar solicitudes pendientes'
@@ -195,7 +205,7 @@ class TutoringController extends Controller
             ]);
 
             // Actualizar la solicitud
-            $appointment->status = 'rejected';
+            $appointment->status = AppointmentStatus::Rejected;
             $appointment->save();
 
             return response()->json([
@@ -242,7 +252,7 @@ class TutoringController extends Controller
             }
 
             // Validar que el status sea confirmed
-            if ($appointment->status !== 'confirmed') {
+            if ($appointment->status !== AppointmentStatus::Confirmed) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Solo se puede marcar asistencia en solicitudes aceptadas'
@@ -250,7 +260,7 @@ class TutoringController extends Controller
             }
 
             // Actualizar la solicitud (student_attended no existe en BD)
-            $appointment->status = 'completed';
+            $appointment->status = AppointmentStatus::Completed;
             $appointment->save();
 
             return response()->json([
@@ -330,7 +340,7 @@ class TutoringController extends Controller
                 'teacher_id' => 'required|exists:users,id',
                 'subject' => 'nullable|string|max:255',
                 'topic' => 'nullable|string|max:255',
-                'requested_date' => 'required|date|after:today',
+                'requested_date' => 'required|date|after_or_equal:today',
                 'requested_time' => 'required|date_format:H:i',
                 'notes' => 'nullable|string'
             ]);

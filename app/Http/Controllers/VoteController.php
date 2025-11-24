@@ -11,14 +11,31 @@ use IncadevUns\CoreDomain\Models\Vote as ModelsVote;
 
 class VoteController extends Controller
 {
+    /**
+     * Helper para obtener el user_id del request
+     */
+    private function getUserId(Request $request): ?int
+    {
+        $userId = $request->query('user_id') ?? $request->header('X-User-Id');
+        return $userId ? (int) $userId : null;
+    }
+
     public function voteThread(Request $request, $threadId): JsonResponse
     {
+        $userId = $this->getUserId($request);
+        
+        if (!$userId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ID de usuario no proporcionado'
+            ], 400);
+        }
+
         $validated = $request->validate([
             'value' => 'required|in:1,-1',
         ]);
 
         $thread = ModelsThread::findOrFail($threadId);
-        $userId = auth('sanctum')->id() ?? auth()->id();
 
         // Buscar voto existente
         $existingVote = ModelsVote::where([
@@ -58,12 +75,20 @@ class VoteController extends Controller
 
     public function voteComment(Request $request, $commentId): JsonResponse
     {
+        $userId = $this->getUserId($request);
+        
+        if (!$userId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ID de usuario no proporcionado'
+            ], 400);
+        }
+
         $validated = $request->validate([
             'value' => 'required|in:1,-1',
         ]);
 
         $comment = ModelsComment::findOrFail($commentId);
-        $userId = auth('sanctum')->id() ?? auth()->id();
 
         // Buscar voto existente
         $existingVote = ModelsVote::where([
@@ -101,10 +126,10 @@ class VoteController extends Controller
         ]);
     }
 
-    public function getThreadVotes($threadId): JsonResponse
+    public function getThreadVotes(Request $request, $threadId): JsonResponse
     {
         $thread = ModelsThread::findOrFail($threadId);
-        $userId = auth('sanctum')->id() ?? auth()->id();
+        $userId = $this->getUserId($request);
 
         // Calcular score como SUM(value)
         $totalScore = $thread->votes()->sum('value');
@@ -124,10 +149,10 @@ class VoteController extends Controller
         ]);
     }
 
-    public function getCommentVotes($commentId): JsonResponse
+    public function getCommentVotes(Request $request, $commentId): JsonResponse
     {
         $comment = ModelsComment::findOrFail($commentId);
-        $userId = auth('sanctum')->id() ?? auth()->id();
+        $userId = $this->getUserId($request);
 
         // Calcular score como SUM(value)
         $totalScore = $comment->votes()->sum('value');
