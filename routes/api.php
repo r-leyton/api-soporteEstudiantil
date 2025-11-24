@@ -72,4 +72,8 @@ Route::prefix('report')->group(function () {
         Route::post('/reports/enrolled-courses', [AcademicReportController::class, 'enrolledCoursesReport']);
         Route::post('/reports/single-course-grades', [AcademicReportController::class, 'singleCourseGradesReport']);
         Route::post('/reports/academic-summary', [AcademicReportController::class, 'studentAcademicSummary']);
+
+        Route::get('/student-groups', [AcademicReportController::class, 'getStudentGroups']);
+        Route::get('/group-grades', [AcademicReportController::class, 'getGroupGrades']);
+        Route::get('/academic-summary-info', [AcademicReportController::class, 'getAcademicSummary']);
     });
