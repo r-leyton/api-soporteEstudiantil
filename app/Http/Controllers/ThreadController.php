@@ -39,18 +39,18 @@ class ThreadController extends Controller
     public function indexByUser(Request $request, $userId)
     {
         $query = ModelsThread::where('user_id', $userId)
-                      ->with(['user', 'forum'])
+                      ->with(['user', 'forum', 'votes'])
                       ->withCount(['comments', 'votes']);
-        
+
         if ($request->has('forum_id') && $request->forum_id) {
             $query->where('forum_id', $request->forum_id);
         }
-        
+
         $query->orderBy('created_at', 'desc');
-        
+
         $perPage = $request->get('per_page', 15);
         $threads = $query->paginate($perPage);
-        
+
         return ThreadResource::collection($threads);
     }
 

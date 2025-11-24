@@ -10,6 +10,15 @@ use IncadevUns\CoreDomain\Models\Thread as ModelsThread;
 
 class CommentController extends Controller
 {
+    /**
+     * Helper para obtener el user_id del request
+     */
+    private function getUserId(Request $request): ?int
+    {
+        $userId = $request->query('user_id') ?? $request->header('X-User-Id');
+        return $userId ? (int) $userId : null;
+    }
+
     public function indexByThread(Request $request, $threadId)
     {
         $thread = ModelsThread::findOrFail($threadId);
@@ -47,8 +56,17 @@ class CommentController extends Controller
 
     public function store(Request $request, $threadId): JsonResponse
     {
+        $userId = $this->getUserId($request);
+        
+        if (!$userId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ID de usuario no proporcionado'
+            ], 400);
+        }
+
         $validated = $request->validate([
-            'body' => 'required|string|min:5',
+            'body' => 'required|string|min:1',
             'parent_id' => 'nullable|exists:comments,id',
         ]);
 
@@ -65,7 +83,7 @@ class CommentController extends Controller
         }
 
         $comment = ModelsComment::create([
-            'user_id' => auth()->id(),
+            'user_id' => $userId,
             'thread_id' => $thread->id,
             'parent_id' => $validated['parent_id'] ?? null,
             'body' => $validated['body'],

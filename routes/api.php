@@ -16,6 +16,7 @@ Route::get('/test', function () {
     ]);
 });
 
+// ===== FOROS =====
 // Rutas públicas (solo lectura)
 Route::get('/forums', [ForumController::class, 'index']);
 Route::get('/forums/{forum}', [ForumController::class, 'show']);
@@ -25,44 +26,41 @@ Route::get('/threads/{threadId}/comments', [CommentController::class, 'indexByTh
 Route::get('/threads/{threadId}/votes', [VoteController::class, 'getThreadVotes']);
 Route::get('/comments/{commentId}/votes', [VoteController::class, 'getCommentVotes']);
 
-// Rutas protegidas (requieren autenticación)
-Route::middleware('auth:sanctum')->group(function () {
-    // Forums (crear, editar, eliminar)
-    Route::post('/forums', [ForumController::class, 'store']);
-    Route::put('/forums/{forum}', [ForumController::class, 'update']);
-    Route::delete('/forums/{forum}', [ForumController::class, 'destroy']);
+// Rutas de escritura
+Route::post('/forums', [ForumController::class, 'store']);
+Route::put('/forums/{forum}', [ForumController::class, 'update']);
+Route::delete('/forums/{forum}', [ForumController::class, 'destroy']);
 
-    // Threads (crear, editar, eliminar)
-    Route::post('/forums/{forumId}/threads', [ThreadController::class, 'store']);
-    Route::put('/threads/{thread}', [ThreadController::class, 'update']);
-    Route::delete('/threads/{thread}', [ThreadController::class, 'destroy']);
-    Route::get('/users/{userId}/threads', [ThreadController::class, 'indexByUser']);
+Route::post('/forums/{forumId}/threads', [ThreadController::class, 'store']);
+Route::put('/threads/{thread}', [ThreadController::class, 'update']);
+Route::delete('/threads/{thread}', [ThreadController::class, 'destroy']);
+Route::get('/users/{userId}/threads', [ThreadController::class, 'indexByUser']);
 
-    // Comments (crear, editar, eliminar)
-    Route::post('/threads/{threadId}/comments', [CommentController::class, 'store']);
-    Route::put('/comments/{comment}', [CommentController::class, 'update']);
-    Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
-    Route::get('/users/{userId}/comments', [CommentController::class, 'indexByUser']);
+Route::post('/threads/{threadId}/comments', [CommentController::class, 'store']);
+Route::put('/comments/{comment}', [CommentController::class, 'update']);
+Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
+Route::get('/users/{userId}/comments', [CommentController::class, 'indexByUser']);
 
-    // Votes (crear/toggle)
-    Route::post('/threads/{threadId}/votes', [VoteController::class, 'voteThread']);
-    Route::post('/comments/{commentId}/votes', [VoteController::class, 'voteComment']);
+Route::post('/threads/{threadId}/votes', [VoteController::class, 'voteThread']);
+Route::post('/comments/{commentId}/votes', [VoteController::class, 'voteComment']);
 
-    // ===== TUTORÍAS =====
-    Route::prefix('tutoring')->group(function () {
-        // Teacher routes
-        Route::get('/requests', [TutoringController::class, 'getTeacherRequests']);
-        Route::post('/requests/{id}/accept', [TutoringController::class, 'acceptRequest']);
-        Route::post('/requests/{id}/reject', [TutoringController::class, 'rejectRequest']);
-        Route::post('/requests/{id}/mark-attendance', [TutoringController::class, 'markAttendance']);
-        Route::get('/history', [TutoringController::class, 'getTeacherHistory']);
+// ===== TUTORÍAS =====
+// Teacher routes
+Route::get('/tutoring/requests', [TutoringController::class, 'getTeacherRequests']);
+Route::post('/tutoring/requests/{id}/accept', [TutoringController::class, 'acceptRequest']);
+Route::post('/tutoring/requests/{id}/reject', [TutoringController::class, 'rejectRequest']);
+Route::post('/tutoring/requests/{id}/mark-attendance', [TutoringController::class, 'markAttendance']);
+Route::get('/tutoring/history', [TutoringController::class, 'getTeacherHistory']);
 
-        // Student routes
-        Route::post('/requests', [TutoringController::class, 'createRequest']);
-        Route::get('/my-requests', [TutoringController::class, 'getStudentRequests']);
-        Route::get('/teachers', [TutoringController::class, 'getAvailableTeachers']);
+// Teacher availability management
+Route::get('/tutoring/my-availability', [TutoringController::class, 'getMyAvailability']);
+Route::post('/tutoring/availability', [TutoringController::class, 'createAvailability']);
+Route::delete('/tutoring/availability/{id}', [TutoringController::class, 'deleteAvailability']);
 
-        // Shared
-        Route::get('/availabilities/{teacherId}', [TutoringController::class, 'getTeacherAvailability']);
-    });
-});
+// Student routes
+Route::post('/tutoring/requests', [TutoringController::class, 'createRequest']);
+Route::get('/tutoring/my-requests', [TutoringController::class, 'getStudentRequests']);
+Route::get('/tutoring/teachers', [TutoringController::class, 'getAvailableTeachers']);
+
+// Shared
+Route::get('/tutoring/availabilities/{teacherId}', [TutoringController::class, 'getTeacherAvailability']);
