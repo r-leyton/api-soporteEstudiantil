@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AcademicReportController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ForumController;
 use App\Http\Controllers\ThreadController;
@@ -57,6 +58,20 @@ Route::get('/tutoring/my-availability', [TutoringController::class, 'getMyAvaila
 Route::post('/tutoring/availability', [TutoringController::class, 'createAvailability']);
 Route::delete('/tutoring/availability/{id}', [TutoringController::class, 'deleteAvailability']);
 
+        // Shared
+        Route::get('/availabilities/{teacherId}', [TutoringController::class, 'getTeacherAvailability']);
+    });
+    
+});
+Route::prefix('report')->group(function () {
+        Route::post('/reports/enrolled-courses', [AcademicReportController::class, 'enrolledCoursesReport']);
+        Route::post('/reports/single-course-grades', [AcademicReportController::class, 'singleCourseGradesReport']);
+        Route::post('/reports/academic-summary', [AcademicReportController::class, 'studentAcademicSummary']);
+
+        Route::get('/student-groups', [AcademicReportController::class, 'getStudentGroups']);
+        Route::get('/group-grades', [AcademicReportController::class, 'getGroupGrades']);
+        Route::get('/academic-summary-info', [AcademicReportController::class, 'getAcademicSummary']);
+    });
 // Student routes
 Route::post('/tutoring/requests', [TutoringController::class, 'createRequest']);
 Route::get('/tutoring/my-requests', [TutoringController::class, 'getStudentRequests']);
