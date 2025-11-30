@@ -121,7 +121,7 @@ class TutoringController extends Controller
             $appointment = Appointment::findOrFail($id);
 
             // Validar que solo el profesor asignado puede aceptar
-            if ($appointment->teacher_id !== $teacherId) {
+            if ($appointment->teacher_id != $teacherId) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No tienes permiso para aceptar esta solicitud'
@@ -184,7 +184,7 @@ class TutoringController extends Controller
             $appointment = Appointment::findOrFail($id);
 
             // Validar que solo el profesor asignado puede rechazar
-            if ($appointment->teacher_id !== $teacherId) {
+            if ($appointment->teacher_id != $teacherId) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No tienes permiso para rechazar esta solicitud'
@@ -244,7 +244,7 @@ class TutoringController extends Controller
             $appointment = Appointment::findOrFail($id);
 
             // Validar que solo el profesor asignado puede marcar asistencia
-            if ($appointment->teacher_id !== $teacherId) {
+            if ($appointment->teacher_id != $teacherId) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No tienes permiso para marcar la asistencia de esta solicitud'
@@ -624,7 +624,7 @@ class TutoringController extends Controller
             $availability = Availability::findOrFail($id);
 
             // Validar que la disponibilidad pertenece al profesor autenticado
-            if ($availability->user_id !== $teacherId) {
+            if ($availability->user_id != $teacherId) {
                 return response()->json([
                     'success' => false,
                     'message' => 'No tienes permiso para eliminar esta disponibilidad'
