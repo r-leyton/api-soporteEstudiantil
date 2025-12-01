@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/test', function () {
     return response()->json([
-        'message' => '¡API funcionando correctamente!',
+        'message' => '¡API funcionando correctamente! :)',
         'status' => 'success',
         'timestamp' => now()
     ]);
