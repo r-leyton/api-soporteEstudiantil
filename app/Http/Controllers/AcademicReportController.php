@@ -181,7 +181,7 @@ class AcademicReportController extends Controller
                 $completedExams = $enrollment->grades->count();
 
                 return [
-                    'enrollment_id' => $enrollment->id,
+                    'enrollment_id' => $enrollment->id, 
                     'group_id' => $enrollment->group->id,
                     'group_name' => $enrollment->group->name,
                     'course_name' => $enrollment->group->courseVersion->course->name,

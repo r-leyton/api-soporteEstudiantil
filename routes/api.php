@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/test', function () {
     return response()->json([
-        'message' => '¡API funcionando correctamente! :)',
+        'message' => '¡API funcionando correctamente!',
         'status' => 'success',
         'timestamp' => now()
     ]);
@@ -62,8 +62,8 @@ Route::delete('/tutoring/availability/{id}', [TutoringController::class, 'delete
 Route::get('/availabilities/{teacherId}', [TutoringController::class, 'getTeacherAvailability']);
 
 Route::prefix('report')->group(function () {
-    Route::post('/reports/enrolled-courses', [AcademicReportController::class, 'enrolledCoursesReport']);
-    Route::post('/reports/single-course-grades', [AcademicReportController::class, 'singleCourseGradesReport']);
+    Route::post('/reports/enrolled-courses', [AcademicReportController::class, 'enrolledCoursesReport']); 
+    Route::post('/reports/single-course-grades', [AcademicReportController::class, 'singleCourseGradesReport']); 
     Route::post('/reports/academic-summary', [AcademicReportController::class, 'studentAcademicSummary']);
 
     Route::get('/student-groups', [AcademicReportController::class, 'getStudentGroups']);
