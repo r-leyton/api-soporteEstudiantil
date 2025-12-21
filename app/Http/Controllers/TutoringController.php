@@ -292,7 +292,7 @@ class TutoringController extends Controller
      * Obtiene el historial de tutorías completadas/rechazadas del profesor
      * GET /api/tutoring/history
      */
-    public function getTeacherHistory(): JsonResponse
+    public function getTeacherHistory(Request $request): JsonResponse
     {
         try {
             $teacherId = $this->getUserId($request);
@@ -408,8 +408,10 @@ class TutoringController extends Controller
     public function getStudentRequests(Request $request): JsonResponse
     {
         try {
-            $studentId = $this->getUserId($request);
             
+            // $studentId = $this->getUserId($request);
+
+            $studentId = $request->input('user_id');
             if (!$studentId) {
                 return response()->json([
                     'success' => false,
@@ -435,7 +437,7 @@ class TutoringController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => $requests,
-                'message' => 'Solicitudes obtenidas correctamente'
+                'message' => 'Solicitudes obtenidas correctamente!'
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
