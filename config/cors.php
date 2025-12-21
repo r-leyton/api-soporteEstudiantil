@@ -15,13 +15,11 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:4321', 'http://127.0.0.1:4321'],
-
-    'allowed_origins_patterns' => [],
+    'allowed_origins' => ['http://localhost:4321', 'http://127.0.0.1:4321','https://incadev.vercel.app'],
 
     'allowed_headers' => ['*'],
 
@@ -29,6 +27,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => true,
+    'supports_credentials' => false,
 
 ];
