@@ -234,11 +234,17 @@ class AcademicReportController extends Controller
 public function getAcademicSummary(Request $request)
 {
     try {
-        $validated = $request->validate([
-            'student_id' => 'required|integer'
-        ]);
+        // Obtener student_id de query param o input
+        $studentId = $request->query('student_id') ?? $request->input('student_id');
 
-        $studentId = $validated['student_id'];
+        if (!$studentId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'student_id es requerido'
+            ], 400);
+        }
+
+        $studentId = (int) $studentId;
 
 
         $enrollments = Enrollment::where('user_id', $studentId)
@@ -315,13 +321,19 @@ public function getAcademicSummary(Request $request)
     public function getGroupGrades(Request $request)
     {
         try {
-            $validated = $request->validate([
-                'student_id' => 'required|integer',
-                'group_id' => 'required|integer|exists:groups,id'
-            ]);
+            // Obtener parámetros de query param o input
+            $studentId = $request->query('student_id') ?? $request->input('student_id');
+            $groupId = $request->query('group_id') ?? $request->input('group_id');
 
-            $studentId = $validated['student_id'];
-            $groupId = $validated['group_id'];
+            if (!$studentId || !$groupId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'student_id y group_id son requeridos'
+                ], 400);
+            }
+
+            $studentId = (int) $studentId;
+            $groupId = (int) $groupId;
 
             // Consultar matrícula con relación user
             $enrollment = Enrollment::where('user_id', $studentId)
