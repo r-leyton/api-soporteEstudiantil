@@ -408,14 +408,13 @@ class TutoringController extends Controller
     public function getStudentRequests(Request $request): JsonResponse
     {
         try {
-            
-            // $studentId = $this->getUserId($request);
+            // Usar helper que acepta query param (?user_id=) o header (X-User-Id)
+            $studentId = $this->getUserId($request);
 
-            $studentId = $request->input('user_id');
             if (!$studentId) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'ID de usuario no proporcionado'
+                    'message' => 'user_id es requerido (query param o header X-User-Id)'
                 ], 400);
             }
 

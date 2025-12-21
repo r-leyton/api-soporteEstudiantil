@@ -17,16 +17,16 @@ class AcademicReportController extends Controller
     public function enrolledCoursesReport(Request $request)
     {
         try {
-            // ETAPA 1: Validación
+            // ETAPA 1: Validación (sin exists:users,id para evitar problemas de sincronización de BD)
             $validated = $request->validate([
-                'student_id' => 'required|integer|exists:users,id'
+                'student_id' => 'required|integer'
             ]);
 
             $studentId = $validated['student_id'];
 
-            // ETAPA 2: Consultar matrículas
+            // ETAPA 2: Consultar matrículas con relación user
             $enrollments = Enrollment::where('user_id', $studentId)
-                ->with(['group.courseVersion.course', 'result'])
+                ->with(['group.courseVersion.course', 'result', 'user'])
                 ->orderBy('created_at', 'desc')
                 ->get();
 
@@ -38,8 +38,8 @@ class AcademicReportController extends Controller
                 ], 404);
             }
 
-            // ETAPA 3: Obtener estudiante
-            $student = \App\Models\User::find($studentId);
+            // ETAPA 3: Obtener estudiante desde la relación del enrollment
+            $student = $enrollments->first()->user;
             if (!$student) {
                 return response()->json([
                     'success' => false,
@@ -75,9 +75,9 @@ class AcademicReportController extends Controller
 
     public function singleCourseGradesReport(Request $request)
     {
-        // Línea 1: Validar que vengan ambos IDs en el request
+        // Línea 1: Validar que vengan ambos IDs en el request (sin exists:users,id)
         $validated = $request->validate([
-            'student_id' => 'required|integer|exists:users,id',
+            'student_id' => 'required|integer',
             'group_id' => 'required|integer|exists:groups,id'
         ]);
 
@@ -86,18 +86,19 @@ class AcademicReportController extends Controller
         $groupId = $validated['group_id'];
 
 
-        // Línea 4: Consultar la matrícula - CORREGIR RELACIÓN 'result'
+        // Línea 4: Consultar la matrícula con relación user
         $enrollment = Enrollment::where('user_id', $studentId)
             ->where('group_id', $groupId)
             ->with([
                 'group.courseVersion.course',
                 'grades.exam.module',
-                'result'  // ← CORREGIDO: 'result' no 'enrollmentResults'
+                'result',
+                'user'
             ])
             ->firstOrFail();
 
-        // Línea 5: Obtener los datos completos del estudiante
-        $student = \App\Models\User::findOrFail($studentId);
+        // Línea 5: Obtener estudiante desde la relación
+        $student = $enrollment->user;
 
         // Línea 6: Preparar los datos para la vista PDF
         $data = [
@@ -115,25 +116,32 @@ class AcademicReportController extends Controller
     }
     public function studentAcademicSummary(Request $request)
     {
-        // Línea 1: El frontend debe enviar el student_id en el request
+        // Línea 1: El frontend debe enviar el student_id en el request (sin exists:users,id)
         $validated = $request->validate([
-            'student_id' => 'required|integer|exists:users,id'
+            'student_id' => 'required|integer'
         ]);
 
         // Línea 2: Obtener el ID del estudiante desde el request
         $studentId = $validated['student_id'];
 
-        // Línea 4: Consultar todas las matrículas - CORREGIR RELACIÓN 'result'
+        // Línea 4: Consultar todas las matrículas con relación user
         $enrollments = Enrollment::where('user_id', $studentId)
-            ->with(['group.courseVersion.course', 'result']) // ← CORREGIDO: 'result'
+            ->with(['group.courseVersion.course', 'result', 'user'])
             ->get();
 
-        // Línea 5: Calcular estadísticas - CORREGIR ACCESO A RELACIÓN
+        if ($enrollments->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El estudiante no tiene matrículas registradas'
+            ], 404);
+        }
+
+        // Línea 5: Calcular estadísticas
         $completedCourses = $enrollments->where('result.status', 'approved')->count();
         $inProgressCourses = $enrollments->where('academic_status', 'active')->count();
 
-        // Línea 6: Obtener los datos completos del estudiante
-        $student = \App\Models\User::findOrFail($studentId);
+        // Línea 6: Obtener estudiante desde la relación
+        $student = $enrollments->first()->user;
 
         // Línea 7: Preparar los datos para la vista PDF
         $data = [
@@ -161,7 +169,7 @@ class AcademicReportController extends Controller
     {
         try {
             $validated = $request->validate([
-                'student_id' => 'required|integer|exists:users,id'
+                'student_id' => 'required|integer'
             ]);
 
             $studentId = $validated['student_id'];
@@ -171,7 +179,8 @@ class AcademicReportController extends Controller
                 ->with([
                     'group.courseVersion.course',
                     'result',
-                    'grades.exam.module'
+                    'grades.exam.module',
+                    'user'
                 ])
                 ->orderBy('created_at', 'desc')
                 ->get();
@@ -217,7 +226,7 @@ public function getAcademicSummary(Request $request)
 {
     try {
         $validated = $request->validate([
-            'student_id' => 'required|integer|exists:users,id'
+            'student_id' => 'required|integer'
         ]);
 
         $studentId = $validated['student_id'];
@@ -227,11 +236,20 @@ public function getAcademicSummary(Request $request)
             ->with([
                 'group.courseVersion.course',
                 'result',
-                'grades'
+                'grades',
+                'user'
             ])
             ->get();
 
-        $student = \App\Models\User::find($studentId);
+        $student = $enrollments->isNotEmpty() ? $enrollments->first()->user : null;
+
+        if (!$student) {
+            return response()->json([
+                'success' => false,
+                'message' => 'El estudiante no tiene matrículas registradas',
+                'can_generate_report' => false
+            ], 404);
+        }
 
         // Calcular estadísticas
         $completedCourses = $enrollments->where('result.status', 'approved')->count();
@@ -289,23 +307,22 @@ public function getAcademicSummary(Request $request)
     {
         try {
             $validated = $request->validate([
-                'student_id' => 'required|integer|exists:users,id',
+                'student_id' => 'required|integer',
                 'group_id' => 'required|integer|exists:groups,id'
             ]);
 
             $studentId = $validated['student_id'];
             $groupId = $validated['group_id'];
 
-            // Verificar autorización
-            
-
+            // Consultar matrícula con relación user
             $enrollment = Enrollment::where('user_id', $studentId)
                 ->where('group_id', $groupId)
                 ->with([
                     'group.courseVersion.course',
                     'grades.exam.module',
                     'result',
-                    'attendances.classSession.module'
+                    'attendances.classSession.module',
+                    'user'
                 ])
                 ->firstOrFail();
 
