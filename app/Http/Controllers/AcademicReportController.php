@@ -10,9 +10,16 @@ use App\Models\EnrollmentPayment;
 use Illuminate\Http\Request;
 use IncadevUns\CoreDomain\Models\Enrollment as Enrollment;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\User;
 
 class AcademicReportController extends Controller
 {
+
+    private function getUserId(Request $request): ?int
+    {
+        $userId = $request->query('user_id') ?? $request->header('X-User-Id');
+        return $userId ? (int) $userId : null;
+    }
 
     public function enrolledCoursesReport(Request $request)
     {
@@ -167,14 +174,16 @@ class AcademicReportController extends Controller
      */
     public function getStudentGroups(Request $request)
     {
+            $studentId = $this->getUserId($request);
+            if (!$studentId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'user_id es requerido (query param o header X-User-Id)'
+                ], 400);
+            }
+        
         try {
-            $validated = $request->validate([
-                'student_id' => 'required|integer'
-            ]);
-
-            $studentId = $validated['student_id'];
-
-
+              
             $enrollments = Enrollment::where('user_id', $studentId)
                 ->with([
                     'group.courseVersion.course',
