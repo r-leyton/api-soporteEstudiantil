@@ -39,12 +39,12 @@ class ForumController extends Controller
             'user_id' => 'required|exists:users,id',
         ]);
 
-        $forum = ModelsForum::create([
-            'name' => $validated['name'],
-            'description' => $validated['description'],
-            'user_create' => $validated['user_id'],
-            'url_img' => $validated['image_url'] ?? null,
-        ]);
+        $forum = new ModelsForum();
+        $forum->name = $validated['name'];
+        $forum->description = $validated['description'];
+        $forum->user_create = $validated['user_id'];
+        $forum->url_img = $validated['image_url'] ?? null;
+        $forum->save();
 
         return response()->json(new ForumResource($forum), 201);
     }
