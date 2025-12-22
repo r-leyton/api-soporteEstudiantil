@@ -31,6 +31,7 @@ class CommentResource extends JsonResource
             'user_id' => $this->user_id,
             'thread_id' => $this->thread_id,
             'parent_id' => $this->parent_id,
+            'attachment_url' => $this->url_img,
             'user' => new UserResource($this->whenLoaded('user')),
             'thread' => new ThreadResource($this->whenLoaded('thread')),
             'replies' => CommentResource::collection($this->whenLoaded('replies')),
