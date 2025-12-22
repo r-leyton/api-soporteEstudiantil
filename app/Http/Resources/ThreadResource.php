@@ -29,6 +29,7 @@ class ThreadResource extends JsonResource
             'id' => $this->id,
             'title' => $this->title,
             'body' => $this->body,
+            'image_url' => $this->url_img,
             'user_id' => $this->user_id,
             'forum_id' => $this->forum_id,
             'user' => new UserResource($this->whenLoaded('user')),
