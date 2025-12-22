@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:4321', 'http://127.0.0.1:4321','https://incadev.vercel.app'],
+    'allowed_origins' => ['http://localhost:4321', 'http://127.0.0.1:4321', 'https://incadev.vercel.app', 'http://136.110.152.168'],
 
     'allowed_headers' => ['*'],
 
