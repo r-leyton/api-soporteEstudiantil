@@ -13,20 +13,20 @@ class ForumController extends Controller
     public function index(Request $request)
     {
         $query = ModelsForum::query()->withCount('threads');
-        
+
         // Filtro por búsqueda
         if ($request->has('search') && $request->search) {
             $query->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('description', 'like', '%' . $request->search . '%');
+                ->orWhere('description', 'like', '%' . $request->search . '%');
         }
-        
+
         // Orden por defecto
         $query->orderBy('created_at', 'desc');
-        
+
         // Paginación
         $perPage = $request->get('per_page', 15);
         $forums = $query->paginate($perPage);
-        
+
         return ForumResource::collection($forums);
     }
 
@@ -35,9 +35,16 @@ class ForumController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:forums,name',
             'description' => 'required|string|min:10',
+            'image_url' => 'nullable|url',
+            'user_id' => 'required|exists:users,id',
         ]);
 
-        $forum = ModelsForum::create([$validated]);
+        $forum = ModelsForum::create([
+            'name' => $validated['name'],
+            'description' => $validated['description'],
+            'user_create' => $validated['user_id'],
+            'url_img' => $validated['image_url'] ?? null,
+        ]);
 
         return response()->json(new ForumResource($forum), 201);
     }
@@ -51,12 +58,16 @@ class ForumController extends Controller
     {
         // Autorización: solo el propietario o moderador puede actualizar
         // $this->authorize('update', $forum);
-        
+
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255|unique:forums,name,' . $forum->id,
             'description' => 'sometimes|string|min:10',
+            'image_url' => 'sometimes|nullable|url',
         ]);
-
+        if (isset($validated['image_url'])) {
+            $validated['url_img'] = $validated['image_url'];
+            unset($validated['image_url']);
+        }
         $forum->update($validated);
 
         return new ForumResource($forum->fresh());
@@ -66,7 +77,7 @@ class ForumController extends Controller
     {
         // Autorización: solo el propietario puede eliminar
         // $this->authorize('delete', $forum);
-        
+
         $forum->delete();
 
         return response()->json([

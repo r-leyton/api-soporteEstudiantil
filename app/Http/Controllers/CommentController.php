@@ -68,6 +68,7 @@ class CommentController extends Controller
         $validated = $request->validate([
             'body' => 'required|string|min:1',
             'parent_id' => 'nullable|exists:comments,id',
+            'attachment_url' => 'nullable|url',
         ]);
 
         $thread = ModelsThread::findOrFail($threadId);
@@ -87,6 +88,7 @@ class CommentController extends Controller
             'thread_id' => $thread->id,
             'parent_id' => $validated['parent_id'] ?? null,
             'body' => $validated['body'],
+            'url_img' => $validated['attachment_url'] ?? null,
         ]);
 
         return response()->json(new CommentResource($comment->load(['user'])), 201);
