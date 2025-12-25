@@ -321,9 +321,9 @@ public function getAcademicSummary(Request $request)
     public function getGroupGrades(Request $request)
     {
         try {
-            // Obtener parámetros de query param o input
-            $studentId = $request->query('student_id') ?? $request->input('student_id');
-            $groupId = $request->query('group_id') ?? $request->input('group_id');
+            // Obtener parámetros usando get() que funciona para query params
+            $studentId = $request->get('student_id');
+            $groupId = $request->get('group_id');
 
             if (!$studentId || !$groupId) {
                 return response()->json([
