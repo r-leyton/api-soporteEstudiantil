@@ -423,19 +423,41 @@ class TutoringController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            // Mapear el status de vuelta para el frontend
-            $requests->transform(function ($request) {
-                if ($request->status === 'confirmed') {
-                    $request->status = 'accepted';
-                } elseif ($request->status === 'cancelled') {
-                    $request->status = 'rejected';
+            // Transformar los datos para el frontend (igual que getTeacherRequests)
+            $formattedRequests = $requests->map(function ($appointment) {
+                // Mapear el status Enum a strings que espera el frontend
+                $status = $appointment->status;
+                if (is_object($status) && method_exists($status, 'value')) {
+                    $status = $status->value;
                 }
-                return $request;
+                if ($status === 'confirmed') {
+                    $status = 'accepted';
+                } elseif ($status === 'cancelled') {
+                    $status = 'rejected';
+                }
+
+                return [
+                    'id' => $appointment->id,
+                    'teacher_id' => $appointment->teacher_id,
+                    'student_id' => $appointment->student_id,
+                    'start_time' => $appointment->start_time,
+                    'end_time' => $appointment->end_time,
+                    'status' => $status,
+                    'rejection_reason' => $appointment->rejection_reason,
+                    'student_attended' => $appointment->student_attended,
+                    'meet_url' => $appointment->meet_url,
+                    'created_at' => $appointment->created_at,
+                    'updated_at' => $appointment->updated_at,
+                    'teacherName' => $appointment->teacher ? $appointment->teacher->name : 'Desconocido',
+                    'requested_date' => $appointment->start_time ? $appointment->start_time->format('Y-m-d') : null,
+                    'requested_time' => $appointment->start_time ? $appointment->start_time->format('H:i') : null,
+                    'teacher' => $appointment->teacher
+                ];
             });
 
             return response()->json([
                 'success' => true,
-                'data' => $requests,
+                'data' => $formattedRequests,
                 'message' => 'Solicitudes obtenidas correctamente!'
             ], 200);
         } catch (\Exception $e) {
