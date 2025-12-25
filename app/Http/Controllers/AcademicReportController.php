@@ -325,6 +325,14 @@ public function getAcademicSummary(Request $request)
             $studentId = $request->get('student_id');
             $groupId = $request->get('group_id');
 
+            // Debug: Log what we received
+            \Log::info('getGroupGrades params:', [
+                'student_id' => $studentId,
+                'group_id' => $groupId,
+                'all_input' => $request->all(),
+                'query_string' => $request->getQueryString()
+            ]);
+
             if (!$studentId || !$groupId) {
                 return response()->json([
                     'success' => false,
