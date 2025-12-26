@@ -336,7 +336,15 @@ public function getAcademicSummary(Request $request)
             if (!$studentId || !$groupId) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'student_id y group_id son requeridos'
+                    'message' => 'student_id y group_id son requeridos',
+                    'debug' => [
+                        'received_student_id' => $studentId,
+                        'received_group_id' => $groupId,
+                        'all_input' => $request->all(),
+                        'query_params' => $request->query(),
+                        'method' => $request->method(),
+                        'url' => $request->fullUrl()
+                    ]
                 ], 400);
             }
 
