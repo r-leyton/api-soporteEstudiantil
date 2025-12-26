@@ -24,7 +24,7 @@ return [
         'http://127.0.0.1:4321',
         'https://incadev.vercel.app',
         'http://136.110.152.168',
-        'https://instituto.cetvirgendelapuerta.com'
+        'https://instituto.cetivirgendelapuerta.com'
     ],
 
     'allowed_headers' => ['*'],
