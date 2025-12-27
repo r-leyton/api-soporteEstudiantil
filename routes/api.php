@@ -67,7 +67,7 @@ Route::prefix('report')->group(function () {
     Route::post('/reports/academic-summary', [AcademicReportController::class, 'studentAcademicSummary']);
 
     Route::get('/student-groups', [AcademicReportController::class, 'getStudentGroups']);
-    Route::get('/group-grades', [AcademicReportController::class, 'getGroupGrades']);
+    Route::get('/group-grades/{studentId}/{groupId}', [AcademicReportController::class, 'getGroupGrades']);
     Route::get('/academic-summary-info', [AcademicReportController::class, 'getAcademicSummary']);
 });
 // Student routes
